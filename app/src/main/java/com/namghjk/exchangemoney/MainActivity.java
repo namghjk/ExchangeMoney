@@ -6,6 +6,8 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.Toast;
 
@@ -25,6 +27,8 @@ public class MainActivity extends AppCompatActivity {
     Spinner sp_From,sp_To;
     ArrayList<String> arrayTitle;
     ArrayAdapter adapter;
+    Button btn_Convert;
+    EditText edt_enter,edt_result;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,6 +41,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void addControlls(){
+
+        btn_Convert = findViewById(R.id.button);
+        edt_enter = findViewById(R.id.currency_to_be_converted);
+        edt_result = findViewById(R.id.currency_converted);
+
         sp_From = findViewById(R.id.from);
         sp_To = findViewById(R.id.to);
         arrayTitle = new ArrayList<>();
