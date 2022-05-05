@@ -2,14 +2,20 @@ package com.namghjk.exchangemoney;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.app.AlertDialog;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.text.Html;
 import android.util.Log;
+import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.Toast;
+
+import com.google.android.material.textfield.TextInputEditText;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -21,6 +27,7 @@ import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -28,7 +35,11 @@ public class MainActivity extends AppCompatActivity {
     ArrayList<String> arrayTitle;
     ArrayAdapter adapter;
     Button btn_Convert;
-    EditText edt_enter,edt_result;
+    EditText edt_enter;
+    String currency_name_1="";
+    String currency_name_2="";
+    TextInputEditText edt_result;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,6 +70,59 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void addEvents(){
+
+        sp_From.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+                String currentName = sp_From.getSelectedItem().toString();
+
+                String[] seperate =  currentName.split("\\(");
+
+                String currentName1 = seperate[1];
+
+                String[] seperate1 = currentName1.split("\\)");
+
+                currency_name_1 = seperate1[0];
+
+
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> adapterView) {
+
+            }
+        });
+
+        sp_To.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+
+                String currentName = sp_To.getSelectedItem().toString();
+
+                String[] seperate =  currentName.split("\\(");
+
+                String currentName1 = seperate[1];
+
+                String[] seperate1 = currentName1.split("\\)");
+
+                currency_name_2 = seperate1[0];
+
+
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> adapterView) {
+
+            }
+        });
+
+        btn_Convert.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Converte converter = new Converte();
+                converter.execute();
+            }
+        });
 
     }
 
@@ -116,8 +180,100 @@ public class MainActivity extends AppCompatActivity {
 
             adapter.notifyDataSetChanged();
 
-            Log.e("title:",title);
+
 
         }
     }
+
+    private class Converte extends AsyncTask<String,Void,String>{
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+        }
+
+        @Override
+        protected String doInBackground(String... strings) {
+
+            StringBuilder content = new StringBuilder();
+
+            if(currency_name_1 != null && currency_name_2 != null){
+
+                try {
+
+                    String URL1 = "https://"+currency_name_1+".fxexchangerate.com/"+currency_name_2+".xml";
+                    URL url = new URL(URL1.toLowerCase());
+                    InputStreamReader inputStreamReader = new InputStreamReader(url.openConnection().getInputStream());
+                    BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
+                    String line = "";
+                    while ((line = bufferedReader.readLine()) !=null){
+                        content.append(line);
+                    }
+                    bufferedReader.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+
+
+            return content.toString();
+        }
+
+        public String formatDecimal(float number) {
+            float epsilon = 0.004f; // 4 tenths of a cent
+            if (Math.abs(Math.round(number) - number) < epsilon) {
+                return String.format("%10.0f", number); // sdb
+            } else {
+                return String.format("%10.2f", number); // dj_segfault
+            }
+        }
+
+        @Override
+        protected void onPostExecute(String s) {
+            try {
+                if( edt_enter.getText().toString().isEmpty()|| edt_enter.getText().toString() == "" ){
+                    edt_enter.setText("");
+                    return;
+                }
+                XMLDOMParser parser = new XMLDOMParser();
+                Document document = parser.getDocument(s);
+                NodeList nodeList = document.getElementsByTagName("item");
+                String tygia = "";
+                for(int i = 0; i < nodeList.getLength(); i++){
+                    Element element = (Element) nodeList.item(i);
+                    NodeList nodeListDescription = element.getElementsByTagName("description");
+                    Element DecriptionEle = (Element) nodeListDescription.item(i);
+                    tygia = Html.fromHtml(DecriptionEle.getFirstChild().getNodeValue().trim()).toString();
+                }
+
+                String[] arr = tygia.split("\n");
+                String currency = arr[0];
+
+                String[] arrcurency = currency.split("=");
+
+                String currency1 = arrcurency[1];
+                String[] arrcurency1 = currency1.split(" ");
+
+                Float value = Float.parseFloat(edt_enter.getText().toString().trim());
+
+                Float b = Float.parseFloat(arrcurency1[1].trim());
+
+
+                Float c = value * b ;
+
+                edt_result.setText(formatDecimal(c));
+
+                super.onPostExecute(s);
+
+
+            }catch (Exception e){
+                AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+                builder.setTitle("Có lỗi xảy ra").setMessage("Vui lòng chọn lại quốc gia");
+                builder.setCancelable(true);
+            }
+
+        }
+    }
+
+
 }
