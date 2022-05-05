@@ -57,6 +57,7 @@ public class MainActivity extends AppCompatActivity {
         edt_enter = findViewById(R.id.currency_to_be_converted);
         edt_result = findViewById(R.id.currency_converted);
 
+
         sp_From = findViewById(R.id.from);
         sp_To = findViewById(R.id.to);
         arrayTitle = new ArrayList<>();
@@ -226,6 +227,7 @@ public class MainActivity extends AppCompatActivity {
             } else {
                 return String.format("%10.2f", number); // dj_segfault
             }
+
         }
 
         @Override
