@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Locale;
 
@@ -58,6 +59,8 @@ public class MainActivity extends AppCompatActivity {
         edt_result = findViewById(R.id.currency_converted);
 
 
+
+
         sp_From = findViewById(R.id.from);
         sp_To = findViewById(R.id.to);
         arrayTitle = new ArrayList<>();
@@ -71,6 +74,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void addEvents(){
+
+
 
         sp_From.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
@@ -197,25 +202,31 @@ public class MainActivity extends AppCompatActivity {
         protected String doInBackground(String... strings) {
 
             StringBuilder content = new StringBuilder();
+            String URL1 ="";
 
-            if(currency_name_1 != null && currency_name_2 != null){
+            if(currency_name_1 != null && currency_name_2 != null && currency_name_1.equals(currency_name_2) == false) {
 
+                URL1 = "https://" + currency_name_1 + ".fxexchangerate.com/" + currency_name_2 + ".xml";
                 try {
 
-                    String URL1 = "https://"+currency_name_1+".fxexchangerate.com/"+currency_name_2+".xml";
                     URL url = new URL(URL1.toLowerCase());
                     InputStreamReader inputStreamReader = new InputStreamReader(url.openConnection().getInputStream());
                     BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
                     String line = "";
-                    while ((line = bufferedReader.readLine()) !=null){
+                    while ((line = bufferedReader.readLine()) != null) {
                         content.append(line);
                     }
                     bufferedReader.close();
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-            }
 
+            }else {
+
+                return "123";
+
+
+            }
 
             return content.toString();
         }
@@ -232,46 +243,52 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         protected void onPostExecute(String s) {
-            try {
-                if( edt_enter.getText().toString().isEmpty()|| edt_enter.getText().toString() == "" ){
-                    edt_enter.setText("");
-                    return;
+            if(s.equals("123")){
+                DecimalFormat dcf = new DecimalFormat("###,###,###.##");
+                edt_result.setText(dcf.format(Float.parseFloat(edt_enter.getText().toString())));
+            }else {
+                try {
+                    if (edt_enter.getText().toString().isEmpty() || edt_enter.getText().toString() == "") {
+                        edt_enter.setText("");
+                        return;
+                    }
+                    XMLDOMParser parser = new XMLDOMParser();
+                    Document document = parser.getDocument(s);
+                    NodeList nodeList = document.getElementsByTagName("item");
+                    String tygia = "";
+                    for (int i = 0; i < nodeList.getLength(); i++) {
+                        Element element = (Element) nodeList.item(i);
+                        NodeList nodeListDescription = element.getElementsByTagName("description");
+                        Element DecriptionEle = (Element) nodeListDescription.item(i);
+                        tygia = Html.fromHtml(DecriptionEle.getFirstChild().getNodeValue().trim()).toString();
+                    }
+
+                    String[] arr = tygia.split("\n");
+                    String currency = arr[0];
+
+                    String[] arrcurency = currency.split("=");
+
+                    String currency1 = arrcurency[1];
+                    String[] arrcurency1 = currency1.split(" ");
+
+                    Float value = Float.parseFloat(edt_enter.getText().toString().trim());
+
+                    Float b = Float.parseFloat(arrcurency1[1].trim());
+
+
+                    Float c = value * b;
+
+                    DecimalFormat dcf = new DecimalFormat("###,###,###.##");
+                    edt_result.setText(dcf.format(c));
+
+                    super.onPostExecute(s);
+
+
+                } catch (Exception e) {
+                    AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+                    builder.setTitle("Có lỗi xảy ra").setMessage("Vui lòng chọn lại quốc gia");
+                    builder.setCancelable(true);
                 }
-                XMLDOMParser parser = new XMLDOMParser();
-                Document document = parser.getDocument(s);
-                NodeList nodeList = document.getElementsByTagName("item");
-                String tygia = "";
-                for(int i = 0; i < nodeList.getLength(); i++){
-                    Element element = (Element) nodeList.item(i);
-                    NodeList nodeListDescription = element.getElementsByTagName("description");
-                    Element DecriptionEle = (Element) nodeListDescription.item(i);
-                    tygia = Html.fromHtml(DecriptionEle.getFirstChild().getNodeValue().trim()).toString();
-                }
-
-                String[] arr = tygia.split("\n");
-                String currency = arr[0];
-
-                String[] arrcurency = currency.split("=");
-
-                String currency1 = arrcurency[1];
-                String[] arrcurency1 = currency1.split(" ");
-
-                Float value = Float.parseFloat(edt_enter.getText().toString().trim());
-
-                Float b = Float.parseFloat(arrcurency1[1].trim());
-
-
-                Float c = value * b ;
-
-                edt_result.setText(formatDecimal(c));
-
-                super.onPostExecute(s);
-
-
-            }catch (Exception e){
-                AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
-                builder.setTitle("Có lỗi xảy ra").setMessage("Vui lòng chọn lại quốc gia");
-                builder.setCancelable(true);
             }
 
         }
