@@ -11,6 +11,14 @@
         android:layout_width="match_parent"
         android:layout_height="65dp">
 
+        <ImageButton
+            android:id="@+id/btnBack"
+            android:src="@drawable/ic_back"
+            android:layout_width="65dp"
+            android:padding="15dp"
+            android:layout_height="65dp"/>
+
+
 
         <TextView
             android:text="History"
