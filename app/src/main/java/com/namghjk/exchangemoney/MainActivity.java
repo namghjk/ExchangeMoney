@@ -1,12 +1,16 @@
 package com.namghjk.exchangemoney;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.app.AlertDialog;
+import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.text.Html;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -30,6 +34,8 @@ import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Locale;
 
+import Model.History;
+
 public class MainActivity extends AppCompatActivity {
 
     Spinner sp_From,sp_To;
@@ -42,6 +48,7 @@ public class MainActivity extends AppCompatActivity {
     TextInputEditText edt_result;
 
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -50,6 +57,9 @@ public class MainActivity extends AppCompatActivity {
         addEvents();
 
         new ReadRSS().execute("https://aud.fxexchangerate.com/rss.xml");
+
+
+
     }
 
     private void addControlls(){
@@ -127,8 +137,12 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View view) {
                 Converte converter = new Converte();
                 converter.execute();
+
+
             }
         });
+
+
 
     }
 
@@ -278,8 +292,10 @@ public class MainActivity extends AppCompatActivity {
 
                     Float c = value * b;
 
-                    DecimalFormat dcf = new DecimalFormat("###,###,###.##");
-                    edt_result.setText(dcf.format(c));
+
+                    edt_result.setText(Float.toString(c));
+
+
 
                     super.onPostExecute(s);
 
@@ -291,8 +307,33 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
 
+
+
         }
     }
 
 
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu,menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+
+        int id = item.getItemId();
+        if(id == R.id.item_menu){
+
+            History history = new History(currency_name_1,edt_enter.getText().toString(),currency_name_2,edt_result.getText().toString());
+            Log.e("history ",history.toString());
+
+
+            Intent intent = new Intent(MainActivity.this, HistoryActivity.class);
+            intent.putExtra("history",history);
+            startActivity(intent);
+        }
+
+        return super.onOptionsItemSelected(item);
+    }
 }
